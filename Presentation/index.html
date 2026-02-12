@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hangman Game - Documentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #0F172A;
+            --secondary: #1E293B;
+            --accent: #3B82F6;
+            --accent-light: #60A5FA;
+            --text: #F1F5F9;
+            --text-muted: #CBD5E1;
+            --border: #334155;
+            --success: #10B981;
+            --warning: #F59E0B;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-light);
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 280px;
+            height: 100vh;
+            background: linear-gradient(180deg, var(--primary) 0%, var(--secondary) 100%);
+            border-right: 1px solid var(--border);
+            padding: 2rem 0;
+            overflow-y: auto;
+            z-index: 999;
+            box-shadow: 2px 0 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .sidebar-header {
+            padding: 0 1.5rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .sidebar-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-subtitle {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+        }
+
+        .sidebar-menu li {
+            margin: 0;
+        }
+
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+            position: relative;
+        }
+
+        .sidebar-menu a:hover {
+            color: var(--accent-light);
+            background: rgba(59, 130, 246, 0.1);
+            border-left-color: var(--accent-light);
+            padding-left: 2rem;
+        }
+
+        .sidebar-menu a.active {
+            color: var(--accent-light);
+            background: rgba(59, 130, 246, 0.15);
+            border-left-color: var(--accent);
+            font-weight: 600;
+        }
+
+        .sidebar-menu a::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: currentColor;
+            border-radius: 50%;
+            margin-right: 1rem;
+            opacity: 0.5;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-menu a.active::before {
+            opacity: 1;
+            width: 8px;
+            height: 8px;
+            background: var(--accent);
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            z-index: 1000;
+            padding: 0 2rem;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .nav-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: color 0.3s ease;
+            cursor: pointer;
+        }
+
+        .nav-links a:hover {
+            color: var(--accent-light);
+        }
+
+        .nav-links a.active {
+            color: var(--accent);
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 0.5rem;
+        }
+
+        /* Scroll Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        [data-animation="fade-up"] {
+            opacity: 0;
+            animation: fadeInUp 0.8s ease forwards;
+        }
+
+        [data-animation="fade-left"] {
+            opacity: 0;
+            animation: fadeInLeft 0.8s ease forwards;
+        }
+
+        [data-animation="slide-right"] {
+            opacity: 0;
+            animation: slideInRight 0.8s ease forwards;
+        }
+
+        [data-animation="scale"] {
+            opacity: 0;
+            animation: scaleIn 0.8s ease forwards;
+        }
+
+        /* Main content */
+        main {
+            margin-top: 70px;
+            padding: 0;
+            margin-left: 280px;
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 5rem 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .hero h1 {
+            font-size: 4rem;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            line-height: 1.1;
+        }
+
+        .hero-subtitle {
+            font-size: 1.3rem;
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.75rem 2rem;
+            border-radius: 8px;
+            border: none;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-light);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--accent);
+            border: 2px solid var(--accent);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(59, 130, 246, 0.1);
+            transform: translateY(-2px);
+        }
+
+        /* Content Sections */
+        section {
+            scroll-margin-top: 100px;
+        }
+
+        section[data-animation="fade-up"] {
+            animation-delay: 0.2s;
+        }
+
+        section:nth-child(2)[data-animation="fade-up"] {
+            animation-delay: 0.3s;
+        }
+
+        section:nth-child(3)[data-animation="fade-up"] {
+            animation-delay: 0.4s;
+        }
+
+        section:nth-child(4)[data-animation="fade-up"] {
+            animation-delay: 0.5s;
+        }
+
+        section:nth-child(5)[data-animation="fade-up"] {
+            animation-delay: 0.6s;
+        }
+        section {
+            padding: 4rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        section:nth-child(even) {
+            background: rgba(30, 41, 59, 0.5);
+        }
+
+        h2 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            position: relative;
+            display: inline-block;
+        }
+
+        h2::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent), var(--accent-light));
+            border-radius: 2px;
+        }
+
+        h3 {
+            font-size: 1.5rem;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            color: var(--accent-light);
+        }
+
+        p {
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+            font-size: 1.05rem;
+        }
+
+        /* Feature Grid */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .feature-card {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid var(--border);
+            padding: 2rem;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(59, 130, 246, 0.2);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card h4 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            color: var(--accent-light);
+        }
+
+        .feature-card p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        /* Code Block */
+        .code-section {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+            overflow-x: auto;
+        }
+
+        .code-header {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+            font-family: 'Courier New', monospace;
+        }
+
+        pre {
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+        }
+
+        code {
+            color: var(--accent-light);
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .code-keyword {
+            color: #F472B6;
+        }
+
+        .code-string {
+            color: #10B981;
+        }
+
+        .code-comment {
+            color: #64748B;
+        }
+
+        .code-function {
+            color: #60A5FA;
+        }
+
+        /* Team Section */
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .team-member {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid var(--border);
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .team-member:hover {
+            border-color: var(--accent);
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(59, 130, 246, 0.2);
+        }
+
+        .team-avatar {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-light));
+            border-radius: 50%;
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 2rem;
+            color: white;
+        }
+
+        .team-member h4 {
+            margin-bottom: 0.5rem;
+            color: var(--accent-light);
+        }
+
+        .team-member p {
+            font-size: 0.9rem;
+        }
+
+        /* List Styles */
+        ul, ol {
+            margin-left: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        li {
+            margin-bottom: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        li strong {
+            color: var(--accent-light);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                margin-left: 0;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+                padding: 1rem 0;
+            }
+
+            .sidebar-menu {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0;
+            }
+
+            .sidebar-menu li {
+                flex: 1;
+                min-width: 120px;
+            }
+
+            .sidebar-menu a {
+                padding: 0.75rem 1rem;
+                border-left: none;
+                border-bottom: 3px solid transparent;
+            }
+
+            .sidebar-menu a:hover {
+                border-left: none;
+                border-bottom-color: var(--accent-light);
+            }
+
+            .sidebar-menu a.active {
+                border-left: none;
+                border-bottom-color: var(--accent);
+            }
+
+            main {
+                margin-left: 0;
+                margin-top: 70px;
+            }
+
+            nav {
+                padding: 0 1rem;
+            }
+
+            .nav-brand {
+                font-size: 1.2rem;
+            }
+
+            .nav-links {
+                gap: 1rem;
+                font-size: 0.85rem;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero-subtitle {
+                font-size: 1rem;
+            }
+
+            h2 {
+                font-size: 1.8rem;
+            }
+
+            h3 {
+                font-size: 1.2rem;
+            }
+
+            section {
+                padding: 2rem 1rem;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .team-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .code-section {
+                padding: 1rem;
+            }
+
+            code {
+                font-size: 0.8rem;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        section {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        /* Hangman Art Container */
+        .hangman-art {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+            font-family: 'Courier New', monospace;
+            color: var(--success);
+            text-align: center;
+            white-space: pre;
+            overflow-x: auto;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-title">Menu</div>
+            <div class="sidebar-subtitle">Quick Links</div>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="#intro" class="active" onclick="updateActiveLink(this)">Introduction</a></li>
+            <li><a href="#overview" onclick="updateActiveLink(this)">Overview</a></li>
+            <li><a href="#features" onclick="updateActiveLink(this)">Features</a></li>
+            <li><a href="#algorithm" onclick="updateActiveLink(this)">Algorithm</a></li>
+            <li><a href="#code" onclick="updateActiveLink(this)">Code Snippets</a></li>
+            <li><a href="#team" onclick="updateActiveLink(this)">Team Members</a></li>
+        </ul>
+    </aside>
+
+    <nav>
+        <div class="nav-brand">Hangman Game</div>
+        <ul class="nav-links">
+            <a onclick="scrollTo('intro')" class="active">Introduction</a>
+            <a onclick="scrollTo('features')">Features</a>
+            <a onclick="scrollTo('code')">Code</a>
+            <a onclick="scrollTo('team')">Team</a>
+        </ul>
+    </nav>
+
+    <main>
+        <!-- Hero Section -->
+        <section class="hero" data-animation="fade-up">
+            <div class="hero-content">
+                <h1>Guess & Survive</h1>
+                <p class="hero-subtitle">A classic Hangman game built with C++ featuring strategic gameplay, beautiful ASCII art, and interactive mechanics</p>
+                <div class="hero-buttons">
+                    <button class="btn btn-primary" onclick="scrollTo('features')">Explore Features</button>
+                    <button class="btn btn-secondary" onclick="scrollTo('code')">View Code</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Introduction -->
+        <section id="intro" data-animation="fade-up">
+            <h2>About The Project</h2>
+            <p>
+                This is a console-based Hangman game developed in C++ for an educational project at the University of Central Punjab. The game challenges players to guess a hidden word letter by letter before running out of incorrect attempts.
+            </p>
+            <p>
+                The project demonstrates fundamental programming concepts including string manipulation, vector containers, algorithm design, console I/O, and game flow control through an engaging and interactive experience.
+            </p>
+
+            <h3>Project Details</h3>
+            <ul>
+                <li><strong>Language:</strong> C++ (Windows Console)</li>
+                <li><strong>Type:</strong> Educational Game</li>
+                <li><strong>Institution:</strong> University of Central Punjab</li>
+                <li><strong>Course:</strong> BCCS-B1 | Fall 2025</li>
+                <li><strong>Difficulty Level:</strong> Intermediate</li>
+            </ul>
+        </section>
+
+        <!-- Overview -->
+        <section id="overview" data-animation="fade-up">
+            <h2>Project Overview</h2>
+            <p>
+                Hangman is a classic word-guessing game where players discover a hidden word by guessing letters one at a time. This implementation combines strategic gameplay mechanics with a polished user interface using Windows console features.
+            </p>
+
+            <h3>Key Objectives</h3>
+            <ul>
+                <li>Implement dynamic word selection from a predefined list</li>
+                <li>Manage game state with incorrect guess tracking</li>
+                <li>Provide interactive user feedback with color-coded output</li>
+                <li>Implement special features like the "Deal System"</li>
+                <li>Create engaging ASCII art for visual representation</li>
+            </ul>
+
+            <h3>Game Mechanics</h3>
+            <p>
+                Players have 7 attempts to guess the word. With each incorrect guess, a hangman figure is progressively drawn. The special "Deal System" allows players to reveal a letter after 2 consecutive wrong guesses by sacrificing 2 lives, adding strategic depth to the gameplay.
+            </p>
+        </section>
+
+        <!-- Features -->
+        <section id="features" data-animation="fade-up">
+            <h2>Game Features</h2>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h4>Random Word Selection</h4>
+                    <p>Selects from a diverse word list ensuring fresh gameplay experiences every time.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">⌨️</div>
+                    <h4>Instant Input</h4>
+                    <p>Real-time letter input without requiring Enter key, creating seamless interaction.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🚫</div>
+                    <h4>Duplicate Detection</h4>
+                    <p>Prevents re-guessing the same letter, maintaining game integrity.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">💎</div>
+                    <h4>Special Deal System</h4>
+                    <p>After 2 consecutive wrong guesses, reveal a letter for 2 lives cost.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🎨</div>
+                    <h4>Color-Coded Output</h4>
+                    <p>Different colors for success, errors, and alerts throughout the game.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🎭</div>
+                    <h4>Visual Feedback</h4>
+                    <p>Progressive ASCII art hangman showing game state and remaining attempts.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Algorithm Flow -->
+        <section id="algorithm" data-animation="fade-up">
+            <h2>Algorithm Flow</h2>
+            <p>The game follows a structured algorithm to manage game state and player interactions:</p>
+
+            <h3>Game Loop Process</h3>
+            <ol>
+                <li><strong>Initialize:</strong> Select a random word and setup game variables</li>
+                <li><strong>Display State:</strong> Show current word progress with underscores for hidden letters</li>
+                <li><strong>Accept Input:</strong> Get single character from player using _getch()</li>
+                <li><strong>Validate:</strong> Check if letter was already guessed</li>
+                <li><strong>Match Check:</strong> Search for letter in secret word and reveal all instances if found</li>
+                <li><strong>Update State:</strong> Increment incorrect counter or reset consecutive wrong counter</li>
+                <li><strong>Special Deal:</strong> After 2 consecutive wrongs, offer to reveal a letter for 2 lives</li>
+                <li><strong>Check Outcome:</strong> Determine if game should continue, win, or lose</li>
+                <li><strong>Display Result:</strong> Show final hangman state and game outcome</li>
+            </ol>
+
+            <h3>Core Components</h3>
+            <ul>
+                <li><strong>Word Selection:</strong> Random index from predefined word vector</li>
+                <li><strong>Guess Validation:</strong> Vector search for duplicate letters</li>
+                <li><strong>Display System:</strong> String manipulation with color-coded output</li>
+                <li><strong>ASCII Art:</strong> Progressive hangman visualization based on wrong guesses</li>
+                <li><strong>Game State Management:</strong> Tracking of lives, guesses, and game status</li>
+            </ul>
+        </section>
+
+        <!-- Code Snippets -->
+        <section id="code" data-animation="fade-up">
+            <h2>Code Implementation</h2>
+
+            <h3>1. Random Word Selection</h3>
+            <p>The game selects a random word from a predefined list at the start of each game:</p>
+            <div class="code-section">
+                <div class="code-header">C++ // selectRandomWord() function</div>
+                <pre><code><span class="code-keyword">string</span> <span class="code-function">selectRandomWord</span>() {
+    <span class="code-keyword">vector</span>&lt;<span class="code-keyword">string</span>&gt; wordList;
+    wordList.<span class="code-function">push_back</span>(<span class="code-string">"programming"</span>);
+    wordList.<span class="code-function">push_back</span>(<span class="code-string">"algorithm"</span>);
+    wordList.<span class="code-function">push_back</span>(<span class="code-string">"variable"</span>);
+    
+    <span class="code-function">srand</span>(<span class="code-keyword">static_cast</span>&lt;<span class="code-keyword">unsigned</span> <span class="code-keyword">int</span>&gt;(<span class="code-function">time</span>(0)));
+    <span class="code-keyword">int</span> index = <span class="code-function">rand</span>() % wordList.<span class="code-function">size</span>();
+    <span class="code-keyword">return</span> wordList[index];
+}</code></pre>
+            </div>
+
+            <h3>2. Letter Matching Logic</h3>
+            <p>Core logic that checks if a guessed letter exists in the secret word:</p>
+            <div class="code-section">
+                <div class="code-header">C++ // Process user guess</div>
+                <pre><code><span class="code-keyword">bool</span> correctGuess = <span class="code-keyword">false</span>;
+
+<span class="code-keyword">for</span> (<span class="code-keyword">size_t</span> i = 0; i &lt; secretWord.<span class="code-function">length</span>(); ++i) {
+    <span class="code-keyword">if</span> (secretWord[i] == guess) {
+        guessedWord[i] = guess;  <span class="code-comment">// Reveal letter</span>
+        correctGuess = <span class="code-keyword">true</span>;
+    }
+}
+
+<span class="code-keyword">if</span> (correctGuess) {
+    <span class="code-function">cout</span> &lt;&lt; <span class="code-string">"Correct!"</span> &lt;&lt; <span class="code-function">endl</span>;
+    consecutiveWrong = 0;
+} <span class="code-keyword">else</span> {
+    incorrectGuesses++;
+    consecutiveWrong++;
+}</code></pre>
+            </div>
+
+            <h3>3. Main Game Loop</h3>
+            <p>The heart of the game that manages the game flow:</p>
+            <div class="code-section">
+                <div class="code-header">C++ // Main game loop</div>
+                <pre><code><span class="code-keyword">while</span> (incorrectGuesses &lt; maxIncorrectGuesses && 
+       guessedWord != secretWord) {
+    
+    <span class="code-function">cout</span> &lt;&lt; <span class="code-string">"Current word: "</span> &lt;&lt; guessedWord &lt;&lt; <span class="code-function">endl</span>;
+    <span class="code-function">cout</span> &lt;&lt; <span class="code-string">"Enter your guess: "</span>;
+    
+    guess = <span class="code-function">_getch</span>();  <span class="code-comment">// Instant input</span>
+    guess = <span class="code-function">tolower</span>(guess);
+    
+    <span class="code-comment">// Validate and process guess</span>
+}
+
+<span class="code-keyword">if</span> (guessedWord == secretWord) {
+    <span class="code-function">cout</span> &lt;&lt; <span class="code-string">"You won!"</span> &lt;&lt; <span class="code-function">endl</span>;
+} <span class="code-keyword">else</span> {
+    <span class="code-function">cout</span> &lt;&lt; <span class="code-string">"Game Over! Word: "</span> &lt;&lt; secretWord &lt;&lt; <span class="code-function">endl</span>;
+}</code></pre>
+            </div>
+
+            <h3>Hangman ASCII Stages</h3>
+            <p>Visual representation of the hangman at different stages of the game:</p>
+            <div class="hangman-art">        ___________
+        |         |
+        |         O
+        |        /|\
+        |        / \
+        |
+     ___|___</div>
+        </section>
+
+        <!-- Team -->
+        <section id="team" data-animation="fade-up">
+            <h2>Development Team</h2>
+            <p>This project was developed by dedicated students from the University of Central Punjab:</p>
+
+            <div class="team-grid">
+                <div class="team-member">
+                    <div class="team-avatar">IB</div>
+                    <h4>Ibtihaj Muhammad</h4>
+                    <p>Lead Developer</p>
+                </div>
+
+                <div class="team-member">
+                    <div class="team-avatar">MZ</div>
+                    <h4>Muhammad Zazaan Qazi</h4>
+                    <p>Developer</p>
+                </div>
+
+                <div class="team-member">
+                    <div class="team-avatar">AM</div>
+                    <h4>Arslan Mehmood</h4>
+                    <p>Developer</p>
+                </div>
+
+                <div class="team-member">
+                    <div class="team-avatar">KA</div>
+                    <h4>Kashif Ali</h4>
+                    <p>Developer</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        function scrollTo(id) {
+            const element = document.getElementById(id);
+            element?.scrollIntoView({ behavior: 'smooth' });
+            updateActiveNav(id);
+        }
+
+        function updateActiveNav(id) {
+            document.querySelectorAll('.nav-links a').forEach(link => {
+                link.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Also update sidebar
+            document.querySelectorAll('.sidebar-menu a').forEach(link => {
+                link.classList.remove('active');
+            });
+            document.querySelector(`.sidebar-menu a[href="#${id}"]`)?.classList.add('active');
+        }
+
+        function updateActiveLink(element) {
+            event.preventDefault();
+            document.querySelectorAll('.sidebar-menu a').forEach(link => {
+                link.classList.remove('active');
+            });
+            element.classList.add('active');
+            
+            const id = element.getAttribute('href').substring(1);
+            const targetElement = document.getElementById(id);
+            targetElement?.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Scroll animation observer
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -100px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.animationPlayState = 'running';
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('[data-animation]').forEach(el => {
+            observer.observe(el);
+        });
+
+        // Update active menu items on scroll
+        window.addEventListener('scroll', () => {
+            const sections = ['intro', 'overview', 'features', 'algorithm', 'code', 'team'];
+            let current = 'intro';
+
+            sections.forEach(id => {
+                const section = document.getElementById(id);
+                if (section && section.offsetTop - 100 <= window.scrollY) {
+                    current = id;
+                }
+            });
+
+            // Update top nav
+            document.querySelectorAll('.nav-links a').forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('onclick')?.includes(current)) {
+                    link.classList.add('active');
+                }
+            });
+
+            // Update sidebar
+            document.querySelectorAll('.sidebar-menu a').forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === `#${current}`) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
